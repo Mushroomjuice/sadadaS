@@ -199,7 +199,7 @@ LOGGING = {
     }
 }
 
-
-
+# 指定Django认证系统所使用的User模型类
+AUTH_USER_MODEL = 'users.User'
 
 
