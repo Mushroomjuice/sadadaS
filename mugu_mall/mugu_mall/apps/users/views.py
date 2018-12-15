@@ -3,13 +3,15 @@ from django.shortcuts import render
 # Create your views here.
 
 # 在注册的时候判断用户名是否存在
-from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView
+from rest_framework import status
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView, UpdateAPIView
+from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework.permissions import IsAuthenticated
 from users import serializers
 from users.models import User
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, EmailSerializer, UserDetailSerializer
 
 
 class UsernameCountView(APIView):
@@ -72,7 +74,7 @@ class UserView(CreateAPIView):
         # return Response(serializer.data)
 
 
-from rest_framework.permissions import IsAuthenticated
+
 
 class UserDetailView(RetrieveAPIView):
     """
@@ -83,4 +85,83 @@ class UserDetailView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+# class UserDetailView(GenericAPIView,RetrieveModelMixin):
+#     """
+#     用户详情
+#     """
+#     serializer_class = UserDetailSerializer
+#     permission_classes = [IsAuthenticated]
+#
+#     def get_object(self):
+#         return self.request.user
+#
+#     def get(self,request):
+#         # user = request.user
+#         # serializer = UserDetailSerializer(user)
+#
+#         # serializer = self.get_serializer(user)
+#
+#
+#         return self.retrieve(request)
+
+class EmailView(UpdateAPIView):
+    """
+    用户设置邮箱
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = EmailSerializer
+    def get_object(self):
+        return self.request.user
+
+    # 如果继承了RetrieveAPIView,下面的方法就不需要在写了，但是GenericAPIView的get_object方法默认根据用户的主键pk查询数据，我们可以重写此方法
+    # def put(self,request):
+    #     # user = request.user
+    #     # serializer = EmailSerializer(user,data=request.data)
+    #     # serializer = self.get_serializer(user,data=request.data)
+    #     # serializer.is_valid()
+    #     # serializer.save()
+    #
+    #     return self.retrieve(request)
+
+class VerifyEmailView(APIView):
+    """
+    邮箱验证
+    """
+    def put(self, request):
+        # 获取token
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'message': '缺少token'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 验证token
+        user = User.check_verify_email_token(token)
+        if user is None:
+            return Response({'message': '链接信息无效'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user.email_active = True
+            user.save()
+            return Response({'message': 'OK'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
