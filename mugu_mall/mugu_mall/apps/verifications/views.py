@@ -35,6 +35,7 @@ class SMSCodeView(APIView):
 
         # 1. 随机生成6位数字作为短信验证码
         sms_code = '%06d' % random.randint(0, 999999) # 000010
+        print(sms_code)
 
         # 2. 在redis中存储短信验证码内容，以`mobile`为key，以短信验证码的内容为value
         # redis管道：可以向管道中添加多个redis命令，然后一次性执行
@@ -66,5 +67,5 @@ class SMSCodeView(APIView):
         #     return Response({'message': '发送短信失败'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         # 4. 返回应答，发送短信成功
-        send_sms_code.delay(mobile, sms_code, expires)
+        # send_sms_code.delay(mobile, sms_code, expires)
         return Response({'message': 'OK'})
