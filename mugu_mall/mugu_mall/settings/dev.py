@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import datetime
 import os
 import sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -178,6 +178,16 @@ SESSION_CACHE_ALIAS = "session"
 REST_FRAMEWORK = {
     # 异常处理
     'EXCEPTION_HANDLER': 'mugu_mall.utils.exceptions.exception_handler',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+
+}
+# 设置token的有效时间
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
 
 # 日志

@@ -180,6 +180,13 @@ var vm = new Vue({
                         responseType: 'json'
                     })
                     .then(response => {
+                        // 保存用户的数据
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        // 保存jwt token
+                        localStorage.token = response.data.token;
+                        localStorage.username = response.data.username;
+                        localStorage.user_id = response.data.id;
                         location.href = '/index.html';
                     })
                     .catch(error=> {
