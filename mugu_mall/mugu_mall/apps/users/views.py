@@ -3,10 +3,11 @@ from django.shortcuts import render
 # Create your views here.
 
 # 在注册的时候判断用户名是否存在
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from users import serializers
 from users.models import User
 from users.serializers import UserSerializer
 
@@ -71,5 +72,15 @@ class UserView(CreateAPIView):
         # return Response(serializer.data)
 
 
+from rest_framework.permissions import IsAuthenticated
 
+class UserDetailView(RetrieveAPIView):
+    """
+    用户详情
+    """
+    serializer_class = serializers.UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
