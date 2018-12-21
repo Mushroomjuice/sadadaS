@@ -4,7 +4,7 @@ from django_redis import get_redis_connection
 from rest_framework import serializers
 from rest_framework_jwt.settings import api_settings
 
-from users.models import User
+from users.models import User, Address
 
 
 # class UserSerializer(serializers.ModelSerializer):
@@ -256,6 +256,42 @@ class EmailSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserAddressSerializer(serializers.ModelSerializer):
+    """地址序列化器类"""
+    province_id = serializers.IntegerField(label='省id')
+    city_id = serializers.IntegerField(label='市id')
+    district_id = serializers.IntegerField(label='县id')
+    province = serializers.StringRelatedField(label='省名称', read_only=True)
+    city = serializers.StringRelatedField(label='市名称', read_only=True)
+    district = serializers.StringRelatedField(label='县名称', read_only=True)
+
+    class Meta:
+        model = Address
+        exclude = ('user', 'is_deleted', 'create_time', 'update_time')
+
+    def validate_mobile(self, value):
+        # 校验手机号格式
+        if not re.match(r'^1[3-9]\d{9}$', value):
+            raise serializers.ValidationError('手机号格式不正确')
+
+        return value
+
+    def create(self, validated_data):
+        # 创建并保存用户的地址信息
+        user = self.context['request'].user
+        validated_data['user'] = user
+
+        # 创建地址
+        return super().create(validated_data)
+
+
+class AddressTitleSerializer(serializers.ModelSerializer):
+    """
+    地址标题
+    """
+    class Meta:
+        model = Address
+        fields = ('title',)
 
 
 

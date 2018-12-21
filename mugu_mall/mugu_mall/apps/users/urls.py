@@ -12,3 +12,8 @@ urlpatterns = [
     url(r'^emails/verification/$', views.VerifyEmailView.as_view()),
 
 ]
+
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+router.register('addresses', views.AddressViewSet, base_name='addresses')
+urlpatterns += router.urls
