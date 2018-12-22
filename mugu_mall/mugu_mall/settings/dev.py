@@ -52,7 +52,11 @@ INSTALLED_APPS = [
     'verifications.apps.VerificationsConfig',
     'rest_framework',
     'oauth.apps.OauthConfig',
-    'areas.apps.AreasConfig'
+    'areas.apps.AreasConfig',
+    'ckeditor',  # 富文本编辑器
+    'ckeditor_uploader',  # 富文本编辑器上传图片模块
+    'goods.apps.GoodsConfig',
+    'contents.apps.ContentsConfig',
 
 ]
 
@@ -269,3 +273,19 @@ REST_FRAMEWORK_EXTENSIONS = {
     'DEFAULT_USE_CACHE': 'default',
 }
 
+# FDFS存储设置
+FDFS_CLIENT_CONF = os.path.join(BASE_DIR, 'utils/fastdfs/client.conf')
+FDFS_NGINX_URL = 'http://image.mugu.site:8888/'
+
+# 指定Django默认的文件的存储类
+DEFAULT_FILE_STORAGE = 'mugu_mall.utils.fastdfs.storage.FDFSStorage'
+
+# 富文本编辑器ckeditor配置
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',  # 工具条功能
+        'height': 300,  # 编辑器高度
+        # 'width': 300,  # 编辑器宽
+    },
+}
+CKEDITOR_UPLOAD_PATH = ''  # 上传图片保存路径，使用了FastDFS，所以此处设为''
