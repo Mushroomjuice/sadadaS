@@ -3,6 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 
 # 在注册的时候判断用户名是否存在
+from django_redis import get_redis_connection
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView, UpdateAPIView
@@ -11,11 +12,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
-
+from goods.serializers import SKUSerializer
+from goods.models import SKU
 from users import serializers, constants
 from users.models import User
 from users.serializers import UserSerializer, EmailSerializer, UserDetailSerializer, AddressTitleSerializer, \
-    UserAddressSerializer
+    UserAddressSerializer, HistorySerializer
 
 
 class UsernameCountView(APIView):
@@ -243,7 +245,55 @@ class AddressViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         return Response(serializer.data)
 
 
+# POST /browse_histories/
+class BrowseHistoryView(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = HistorySerializer
 
+    # def post(self, request):
+    #     """
+    #     浏览记录的添加:
+    #     1. 获取sku_id并进行校验(sku_id必传，sku_id对应的商品是否存在)
+    #     2. 在redis中保存登录用户的浏览商品的记录
+    #     3. 返回应答
+    #     """
+    #     # 1. 获取sku_id并进行校验(sku_id必传，sku_id对应的商品是否存在)
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #
+    #     # 2. 在redis中保存登录用户的浏览商品的记录(create)
+    #     serializer.save()
+    #
+    #     # 3. 返回应答
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        """
+        获取用户的浏览记录:
+        1. 从redis中获取用户浏览的商品的sku_id
+        2. 根据商品的sku_id获取对应商品的信息
+        3. 将商品的数据序列化并返回
+        """
+        # 获取登录用户
+        user = request.user
+
+        # 获取redis链接对象
+        redis_conn = get_redis_connection('histories')
+        history_key = 'history_%s' % user.id
+
+        # 1. 从redis中获取用户浏览的商品的sku_id
+        # [b'<sku_id>', b'<sku_id>', ...]
+        sku_ids = redis_conn.lrange(history_key, 0, -1)
+
+        # 2. 根据商品的sku_id获取对应商品的信息
+        skus = []
+        for sku_id in sku_ids:
+            sku = SKU.objects.get(id=sku_id)
+            skus.append(sku)
+
+        # 3. 将商品的数据序列化并返回
+        serializer = SKUSerializer(skus, many=True)
+        return Response(serializer.data)
 
 
 

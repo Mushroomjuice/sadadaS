@@ -1,6 +1,6 @@
 var vm = new Vue({
     el: '#app',
-    // delimiters: ['[[', ']]'],
+    delimiters: ['[[', ']]'],
     data: {
         host,
         username: sessionStorage.username || localStorage.username,
