@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 import datetime
 import os
 import sys
@@ -60,6 +61,9 @@ INSTALLED_APPS = [
     'django_crontab',  # 定时任务
     'haystack',
     'carts.apps.CartsConfig',
+    'xadmin',
+    'crispy_forms',
+    'reversion',
 
 ]
 
@@ -142,7 +146,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ =False
 
 
 # Static files (CSS, JavaScript, Images)

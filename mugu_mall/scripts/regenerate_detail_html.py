@@ -1,34 +1,27 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 
-"""
-功能：手动生成所有SKU的静态detail html文件
-使用方法:
-    ./regenerate_detail_html.py
-"""
+# 批量生成所有商品的静态详情页面
 import sys
 sys.path.insert(0, '../')
 
 # 设置Django运行所依赖的环境变量
 import os
-if not os.getenv('DJANGO_SETTINGS_MODULE'):
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'mugu_mall.settings.dev'
+if not os.environ.get("DJANGO_SETTINGS_MODULE"):
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mugu_mall.settings.dev")
 
 # 让Django进行一次初始化
 import django
 django.setup()
 
-from django.template import loader
 from django.conf import settings
 
-from goods.utils import get_categories
 from goods.models import SKU
+from goods.utils import get_categories
 
 
 def generate_static_sku_detail_html(sku_id):
-    """
-    生成静态商品详情页面
-    :param sku_id: 商品sku id
-    """
+    """生成指定商品的静态详情页面"""
+    # 1. 获取商品详情页所需数据
     # 商品分类菜单
     categories = get_categories()
 
@@ -41,6 +34,7 @@ def generate_static_sku_detail_html(sku_id):
     goods.channel = goods.category1.goodschannel_set.all()[0]
 
     # 构建当前商品的规格键
+    # sku_key = [规格1参数id， 规格2参数id， 规格3参数id, ...]
     sku_specs = sku.skuspecification_set.order_by('spec_id')
     sku_key = []
     for spec in sku_specs:
@@ -67,6 +61,23 @@ def generate_static_sku_detail_html(sku_id):
         spec_sku_map[tuple(key)] = s.id
 
     # 获取当前商品的规格信息
+    # specs = [
+    #    {
+    #        'name': '屏幕尺寸',
+    #        'options': [
+    #            {'value': '13.3寸', 'sku_id': xxx},
+    #            {'value': '15.4寸', 'sku_id': xxx},
+    #        ]
+    #    },
+    #    {
+    #        'name': '颜色',
+    #        'options': [
+    #            {'value': '银色', 'sku_id': xxx},
+    #            {'value': '黑色', 'sku_id': xxx}
+    #        ]
+    #    },
+    #    ...
+    # ]
     specs = goods.goodsspecification_set.order_by('id')
     # 若当前sku的规格信息不完整，则不再继续
     if len(sku_key) < len(specs):
@@ -83,7 +94,7 @@ def generate_static_sku_detail_html(sku_id):
 
         spec.options = options
 
-    # 渲染模板，生成静态html文件
+    # 2. 调用`detail.html`模板文件，进行模板渲染，获取渲染之后的html内容
     context = {
         'categories': categories,
         'goods': goods,
@@ -91,15 +102,24 @@ def generate_static_sku_detail_html(sku_id):
         'sku': sku
     }
 
-    template = loader.get_template('detail.html')
-    html_text = template.render(context)
-    file_path = os.path.join(settings.GENERATED_STATIC_HTML_FILES_DIR, 'goods/'+str(sku_id)+'.html')
-    with open(file_path, 'w') as f:
-        f.write(html_text)
+    # 加载模板
+    from django.template import loader
+    temp = loader.get_template('detail.html')
+
+    # 模板渲染
+    res_html = temp.render(context)
+
+    # 3. 将渲染之后的html内容保存成静态文件(商品详情页的静态文件保存时可以以商品id作为文件名称)
+    save_path = os.path.join(settings.GENERATED_STATIC_HTML_FILES_DIR, 'goods/%s.html' % sku_id)
+
+    with open(save_path, 'w') as f:
+        f.write(res_html)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # 获取所有的商品
     skus = SKU.objects.all()
+
+    # 遍历生成每个商品的静态详情页面
     for sku in skus:
-        print(sku.id)
         generate_static_sku_detail_html(sku.id)

@@ -1,7 +1,7 @@
 from django.shortcuts import render
-
+from rest_framework.authentication import BaseAuthentication
 # Create your views here.
-
+from rest_framework.permissions import IsAuthenticated
 # 在注册的时候判断用户名是否存在
 from django_redis import get_redis_connection
 from rest_framework import status
@@ -150,7 +150,6 @@ class VerifyEmailView(APIView):
             return Response({'message': 'OK'})
 
 
-
 # POST /addresses/
 class AddressViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     serializer_class = UserAddressSerializer
@@ -243,7 +242,6 @@ class AddressViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         # 设置用户地址的标题
         serializer.save()
         return Response(serializer.data)
-
 
 # POST /browse_histories/
 class BrowseHistoryView(CreateAPIView):
